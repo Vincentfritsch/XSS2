@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    
+    <title>XSS</title>
+
+    <link rel="stylesheet" type="text/css" href="vendors/bootstrap.min.css">
+    <script type="text/javascript" src="vendors/purify.min.js"></script>
+</head>
+
+<body style="background-image: url(img/united-squares.png); color: #ffffff;">
+
+    <div class="container" style="margin-bottom: 1%;">
+        <img src="img/tea.png" style="width: 130px; float:right; position:relative; left:50px;">
+        <div style="background-color: rgba(32, 163, 158, 0.8); margin-top: 2%; border-radius: 5px; padding: 1% 5%;">
+            <!-- XSS vulnerability #1
+
+                    Hack hint: typing <script>alert(1)</script> in the url bar won't work, 
+                    but unfortunately, typing something like <img src=" " onerror="alert(1)"> will! -->
+
+            <p class="text-center" id="welcome-text"></p>
+            <p class="text-center small">
+                (Change the 'name' parameter in the URL to replace "applicant" by your identity. Ex :
+                www.blop.com/index.html?name=Simone)</p>
+
+            <h5 style="margin-top: 2%; margin-bottom: 2%;">
+                My assistant Dr Watson is on vacation for a few weeks, so I need a new teammate. <br>
+                Let's start the interview process!
+            </h5>
+
+            <!-- XSS vulnerability #2
+
+                    Hack hint: typing something like <img src=" " onerror="alert(1)"> will work! -->
+
+            <p><strong>Sherlock:</strong> What is your favorite meal?</p>
+
+            <input class="text-center" placeholder="Answer here." id="fav-meal-question" style="margin-bottom: 1%;">
+
+            <p><strong>You:</strong> Well, Mr. Holmes, my favorite meal has always been <span id="fav-meal-answer"
+                    style="color:rgb(8, 55, 66)"></span>...</p>
+
+            <p><strong>Sherlock:</strong> Right, right. I define myself more like a kidney pie person, but I guess that
+                will do.<br>
+                Anyway, I'm not looking for someone to share pies with... I need someone who can HTML-format my
+                speeches, like making my keywords <strong>bold</strong> and...&nbsp;hum, other modern machine stuff.
+                Could you do that?<br>
+                <strong>You:</strong> Sure!</p>
+
+            <div class="row">
+
+                <!-- XSS vulnerability #3
+
+                        Hack hint: typing something like <img src=" " onerror="alert(1)"> will work! -->
+
+                <div class="col-md-4">
+                    <textarea class="form-control" placeholder="Type some HTML here, then hit 'Show result'."
+                        id="html-input" cols="30" rows="10"></textarea>
+                </div>
+                <div class="offset-md-1 col-md-2 ">
+                    <button type="button" class="btn btn-secondary" id="show-html">Show result!</button>
+                </div>
+                <div class="form-control col-md-4 offset-md-1 col-xs-10 offset-xs-1" id="html-output"
+                    style="height:260px;"></div>
+            </div>
+
+
+            <!-- XSS vulnerability #4
+
+                    Hack hint: using javascript pseudo-protocol by typing goto=javascript:alert(1) in the url bar will work! -->
+
+            <p class="text-center" style="margin-top: 3%;">
+                Tired of this interview? Change the 'goto' parameter to any URL you like. <br>
+                Ex : www.blop.com/index.html?goto=https://www.google.fr
+            </p>
+
+        </div>
+    </div>
+
+    <script>
+
+        // General URL settings (boring stuff)
+
+        const url = document.location.search;
+        const params = new URLSearchParams(url);
+
+        // XSS vulnerability #1
+
+        userParam = params.get("name");
+        userName = "applicant";
+
+        if (userParam !== null) {
+            userName = userParam;
+        }
+
+        document.getElementById("welcome-text").innerHTML = "<h1>How do you do, " + userName + "?</h1>";
+
+        //  XSS vulnerability #2
+
+        const input = document.getElementById("fav-meal-question");
+        const log = document.getElementById("fav-meal-answer");
+
+        input.addEventListener("input", updateValue);
+
+        function updateValue(e) {
+            log.innerHTML = e.target.value;
+        }
+
+        //  XSS vulnerability #3
+
+        const htmlInput = document.getElementById("html-input");
+        const htmlOutput = document.getElementById("html-output");
+        const showButton = document.getElementById("show-html");
+
+        showButton.addEventListener("click", showHTML);
+
+        function showHTML() {
+            htmlOutput.innerHTML = htmlInput.value;
+        }
+
+        //  XSS vulnerability #4
+
+        const redir = params.get("goto");
+        if (redir !== null && redir !== "null") {
+            document.location = redir;
+        }
+
+    </script>
+
+</body>
+
+</html>
